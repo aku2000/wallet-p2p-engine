@@ -18,12 +18,12 @@ public class DashboardController {
     /**
      * GET /dashboard
      * Built-in zero-cost metrics dashboard (₹0 spend).
-     * Renders real-time domain counters, JVM memory, and latency metrics.
+     * Renders real-time domain counters and invariant probes.
      * Auto-refreshes every 5 seconds.
      */
     @GetMapping(value = "/dashboard", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> dashboard() {
-        String html = """
+        String template = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -125,22 +125,22 @@ public class DashboardController {
                 <div class="grid">
                     <div class="card">
                         <div class="card-title">Completed Transfers</div>
-                        <div class="card-value val-green">""" + (long) metrics.getTransfersCompleted() + """</div>
+                        <div class="card-value val-green">%d</div>
                         <div class="card-sub">status = completed (conservation verified)</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Declined Transfers</div>
-                        <div class="card-value val-red">""" + (long) metrics.getTransfersDeclined() + """</div>
+                        <div class="card-value val-red">%d</div>
                         <div class="card-sub">reason = insufficient_funds (no overdraft)</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Idempotent Replays</div>
-                        <div class="card-value val-yellow">""" + (long) metrics.getTransfersIdempotentReplay() + """</div>
+                        <div class="card-value val-yellow">%d</div>
                         <div class="card-sub">duplicate keys safely deduplicated</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Wallets Created</div>
-                        <div class="card-value val-blue">""" + (long) metrics.getWalletsCreated() + """</div>
+                        <div class="card-value val-blue">%d</div>
                         <div class="card-sub">race-free get-or-create instances</div>
                     </div>
                 </div>
@@ -191,6 +191,14 @@ public class DashboardController {
             </body>
             </html>
             """;
-        return ResponseEntity.ok(html);
+
+        String rendered = String.format(template,
+                (long) metrics.getTransfersCompleted(),
+                (long) metrics.getTransfersDeclined(),
+                (long) metrics.getTransfersIdempotentReplay(),
+                (long) metrics.getWalletsCreated()
+        );
+
+        return ResponseEntity.ok(rendered);
     }
 }
