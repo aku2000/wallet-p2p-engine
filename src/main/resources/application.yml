@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: wallet-p2p-engine
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/wallet}
+    username: ${DB_USER:wallet}
+    password: ${DB_PASSWORD:wallet}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: WalletHikariPool
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+    tags:
+      application: wallet-p2p-engine
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.wallet: INFO
+
