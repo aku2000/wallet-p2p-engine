@@ -1,0 +1,280 @@
+openapi: 3.0.3
+info:
+  title: Wallet P2P Engine API
+  description: High-concurrency peer-to-peer wallet service with strict financial invariants.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development environment
+  - url: https://wallet-p2p-engine.onrender.com
+    description: Production environment on Render
+
+paths:
+  /wallets:
+    post:
+      summary: Get or create wallet for authenticated user
+      description: Race-free initialization of user wallet.
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Wallet initialized or retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /wallets/{id}:
+    get:
+      summary: Get wallet details and balance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Wallet balance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /transfers:
+    post:
+      summary: Execute atomic money transfer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransferRequest'
+      responses:
+        '201':
+          description: Transfer newly executed and completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '200':
+          description: Idempotent replay of previously completed transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/UnprocessableError'
+
+  /transfers/{id}:
+    get:
+      summary: Get transfer status and audit metadata
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Transfer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /health:
+    get:
+      summary: System health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  service:
+                    type: string
+                    example: wallet-p2p-engine
+
+  /dashboard:
+    get:
+      summary: Operational metrics dashboard
+      security: []
+      responses:
+        '200':
+          description: Real-time HTML dashboard
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    WalletResponse:
+      type: object
+      required:
+        - id
+        - user_id
+        - balance
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+        balance:
+          type: integer
+          format: int64
+          description: Amount in integer paise
+        created_at:
+          type: string
+          format: date-time
+
+    CreateTransferRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount_paise
+        - idempotency_key
+      properties:
+        from:
+          type: string
+          format: uuid
+        to:
+          type: string
+          format: uuid
+        amount_paise:
+          type: integer
+          format: int64
+          minimum: 1
+        idempotency_key:
+          type: string
+        note:
+          type: string
+
+    TransferResponse:
+      type: object
+      required:
+        - id
+        - from_wallet_id
+        - to_wallet_id
+        - amount_paise
+        - status
+        - idempotency_key
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_wallet_id:
+          type: string
+          format: uuid
+        to_wallet_id:
+          type: string
+          format: uuid
+        amount_paise:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [pending, completed, declined, reversed]
+        idempotency_key:
+          type: string
+        note:
+          type: string
+        reversed_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - correlation_id
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        correlation_id:
+          type: string
+
+  responses:
+    BadRequestError:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnauthorizedError:
+      description: Authentication failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenError:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictError:
+      description: Idempotency conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableError:
+      description: Insufficient balance / business rule declined
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
