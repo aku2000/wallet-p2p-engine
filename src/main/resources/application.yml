@@ -20,10 +20,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,metrics,prometheus,info
+        include: health,metrics,prometheus,info,logfile
   endpoint:
     health:
       show-details: always
+    logfile:
+      enabled: true
   metrics:
     distribution:
       percentiles-histogram:
@@ -37,6 +39,8 @@ server:
   port: 8080
 
 logging:
+  file:
+    name: /tmp/wallet.log
   level:
     root: INFO
     com.wallet: INFO

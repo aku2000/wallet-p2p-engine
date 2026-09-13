@@ -53,12 +53,14 @@ Or run individual gates:
 ### Real-Time Web Dashboard
 Visit: **[https://wallet-p2p-engine.onrender.com/dashboard](https://wallet-p2p-engine.onrender.com/dashboard)**  
 - Auto-refreshes every 5 seconds.
-- Displays live JVM counters: **Completed Transfers**, **Declined Transfers**, **Idempotent Replays**, and **Wallets Created**.
+- Displays persistent PostgreSQL audit records: **Completed Transfers**, **Declined Transfers**, **Idempotent Replays**, **Double-Entry Ledger Entries**, and **Wallets Created**.
 
 ### Structured JSON Logs
-- Every request emits structured JSON to `STDOUT` via `logstash-logback-encoder`.
+- Every request emits structured JSON on `STDOUT` via `logstash-logback-encoder`.
 - Includes `correlation_id`, `user_id`, `event` (`wallet.created`, `transfer.completed`, `transfer.declined`, `transfer.idempotent_replay`), and duration.
-- **Sample Log Dump:** A sample of actual structured JSON logs captured during live burst runs is committed in the repository at [`docs/logs-sample.json`](logs-sample.json).
+- **Live Server Log Stream:** View the actual streaming server logs directly in your browser at:  
+  👉 **[https://wallet-p2p-engine.onrender.com/actuator/logfile](https://wallet-p2p-engine.onrender.com/actuator/logfile)**
+- **Burst Test Trace Dump:** A full multi-threaded 30-request concurrency storm trace is committed in the repository at [`docs/logs-sample.json`](logs-sample.json).
 - **Raw Prometheus Stream:** Live metrics are available at [`/actuator/prometheus`](https://wallet-p2p-engine.onrender.com/actuator/prometheus).
 
 ---

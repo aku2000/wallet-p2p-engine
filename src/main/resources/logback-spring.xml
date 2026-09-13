@@ -1,8 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="wallet-p2p-engine"/>
+    <springProperty scope="context" name="logFilePath" source="logging.file.name" defaultValue="/tmp/wallet.log"/>
 
+    <!-- STDOUT Appender (Container runtime / Cloud aggregator) -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>correlation_id</includeMdcKeyName>
+            <includeMdcKeyName>user_id</includeMdcKeyName>
+            <customFields>{"service":"${appName}"}</customFields>
+            <fieldNames>
+                <timestamp>ts</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- FILE Appender (Serves /actuator/logfile for live public inspection) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logFilePath}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>/tmp/wallet-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>3</maxHistory>
+        </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdcKeyName>correlation_id</includeMdcKeyName>
             <includeMdcKeyName>user_id</includeMdcKeyName>
@@ -19,6 +43,7 @@
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <logger name="com.wallet" level="INFO"/>
@@ -26,4 +51,3 @@
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="org.flywaydb" level="INFO"/>
 </configuration>
-
