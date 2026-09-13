@@ -130,7 +130,7 @@ echo ""
 echo "HTTP Status Distribution:"
 sort "$OUT_DIR/status_codes.txt" | uniq -c
 
-SERVER_ERRORS=$(grep -c '^500$' "$OUT_DIR/status_codes.txt" 2>/dev/null || echo 0)
+SERVER_ERRORS=$(grep -c '^500$' "$OUT_DIR/status_codes.txt" || true)
 
 # ── Final balances ────────────────────────────────────────────────────────────
 BAL_A_FINAL=$(fetch_bal "$WALLET_A" "$USER_A")
