@@ -61,3 +61,4 @@ Total infrastructure spend: **₹0 / $0.00**.
 - Deployed on **Render.com** (Free Web Service tier running containerized Spring Boot 21).
 - Database hosted on **Render Managed PostgreSQL 16** (Free tier, 1 GB storage, 20 max connections).
 - Observability provided by built-in `/dashboard` HTML endpoint and `/actuator/metrics` with zero external SaaS fees.
+

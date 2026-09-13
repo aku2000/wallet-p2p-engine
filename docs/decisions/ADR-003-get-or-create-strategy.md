@@ -48,3 +48,4 @@ WHERE user_id = ?;
 ## Consequences
 - **Positive**: 100% race-free wallet initialization; zero HTTP 500 errors under concurrent initialization storms; deterministic single-record guarantee enforced at storage layer.
 - **Negative**: Requires a second `SELECT` query if the row already existed (sub-millisecond execution via indexed lookup).
+

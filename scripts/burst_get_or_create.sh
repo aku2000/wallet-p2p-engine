@@ -8,7 +8,7 @@
 #
 # Usage:
 #   ./scripts/burst_get_or_create.sh [BASE_URL]
-#   Example: ./scripts/burst_get_or_create.sh http://localhost:8080
+#   Example: ./scripts/burst_get_or_create.sh https://wallet-p2p-engine.onrender.com
 # ==============================================================================
 set -euo pipefail
 
@@ -25,22 +25,23 @@ echo "Concurrency:  $CONCURRENCY simultaneous requests"
 echo "Test User:    $USER_ID"
 echo "================================================================="
 
-# Generate payload list for xargs
+# Fire concurrent requests simultaneously using parallel subshells
 for i in $(seq 1 "$CONCURRENCY"); do
-    echo "$i"
-done | xargs -P "$CONCURRENCY" -I {} sh -c '
-    RES=$(curl -s -w "\n%{http_code}" -X POST "'"$BASE_URL"'/wallets" \
-        -H "Authorization: Bearer '"$USER_ID"'" \
-        -H "Content-Type: application/json")
-    BODY=$(echo "$RES" | head -n -1)
-    HTTP_CODE=$(echo "$RES" | tail -n 1)
-    echo "$HTTP_CODE $BODY" > "'"$OUT_DIR"'/resp_{}.txt"
-'
+    (
+        CODE=$(curl -s -o "$OUT_DIR/body_$i.json" -w "%{http_code}" -X POST "$BASE_URL/wallets" \
+            -H "Authorization: Bearer $USER_ID" \
+            -H "Content-Type: application/json")
+        echo "$CODE" > "$OUT_DIR/code_$i.txt"
+    ) &
+done
+
+# Wait for all background requests to complete
+wait
 
 # Analyze results
-ALL_CODES=$(awk '{print $1}' "$OUT_DIR"/resp_*.txt | sort | uniq -c)
-WALLET_IDS=$(awk '{print $2}' "$OUT_DIR"/resp_*.txt | grep -o '"id":"[^"]*"' | sort -u)
-DISTINCT_WALLET_COUNT=$(echo "$WALLET_IDS" | grep -c 'id' || true)
+ALL_CODES=$(cat "$OUT_DIR"/code_*.txt | sort | uniq -c)
+WALLET_IDS=$(grep -h -o '"id":"[^"]*"' "$OUT_DIR"/body_*.json | sort -u)
+DISTINCT_WALLET_COUNT=$(echo "$WALLET_IDS" | wc -l | tr -d ' ')
 
 echo ""
 echo "--- Results Analysis ---"

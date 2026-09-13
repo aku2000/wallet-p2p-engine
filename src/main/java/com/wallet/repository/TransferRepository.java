@@ -56,13 +56,15 @@ public class TransferRepository {
     public void insertPending(UUID id, UUID fromWalletId, UUID toWalletId,
                               long amountPaise, String idempotencyKey,
                               String requestHash, String note) {
+        // Pass UUIDs directly (not .toString()) to avoid PostgreSQL type mismatch errors.
+        // The PGSQL JDBC driver sends UUID with the correct uuid OID when passed as UUID.
         jdbc.update(
                 "INSERT INTO transfers (id, from_wallet_id, to_wallet_id, amount_paise, " +
                 "status, idempotency_key, request_hash, note) " +
                 "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)",
-                id.toString(),
-                fromWalletId.toString(),
-                toWalletId.toString(),
+                id,
+                fromWalletId,
+                toWalletId,
                 amountPaise,
                 idempotencyKey,
                 requestHash,
@@ -74,7 +76,7 @@ public class TransferRepository {
     public void updateStatus(UUID id, TransferStatus status) {
         jdbc.update(
                 "UPDATE transfers SET status = ?, updated_at = NOW() WHERE id = ?",
-                status.name().toLowerCase(), id.toString()
+                status.name().toLowerCase(), id
         );
     }
 
@@ -84,7 +86,7 @@ public class TransferRepository {
                 "SELECT id, from_wallet_id, to_wallet_id, amount_paise, status, " +
                 "idempotency_key, request_hash, note, reversed_by, created_at, updated_at " +
                 "FROM transfers WHERE id = ?",
-                TRANSFER_ROW_MAPPER, id.toString()
+                TRANSFER_ROW_MAPPER, id
         );
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
@@ -105,4 +107,3 @@ public class TransferRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 }
-

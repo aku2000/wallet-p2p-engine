@@ -221,3 +221,4 @@ HAVING w.balance != COALESCE(SUM(CASE WHEN l.direction = 'credit' THEN l.amount_
 | `409 Conflict` | `IDEMPOTENCY_CONFLICT` | Idempotency key reused with a differing request body. |
 | `422 Unprocessable` | `INSUFFICIENT_FUNDS` | Sender balance is strictly less than requested transfer amount. |
 | `500 Internal Error` | `INTERNAL_ERROR` | Unhandled database or system exception. |
+

@@ -43,3 +43,4 @@ Wallet high = jdbc.queryForObject("SELECT ... WHERE id = ? FOR UPDATE", ..., hig
 ## Consequences
 - **Positive**: Complete elimination of deadlocks; deterministic lock acquisition order; no application retry loops; transaction duration is strictly bounded (< 5ms).
 - **Negative**: Requires two round-trips to lock both rows (negligible over connection pool).
+

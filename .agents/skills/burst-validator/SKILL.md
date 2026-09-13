@@ -46,3 +46,4 @@ You can instruct your AI assistant in chat:
 > *"Run the burst-validator skill against https://wallet-p2p-engine.onrender.com"*
 
 The agent will execute all three gates sequentially, stream the terminal verification output, and print a consolidated validation report showing that no money was created or destroyed and all invariants held.
+

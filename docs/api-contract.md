@@ -168,3 +168,4 @@ Interactive HTML dashboard displaying live metrics, invariant status, and system
 - **Path**: `/dashboard`
 - **Auth**: None required (Public)
 - **Content-Type**: `text/html;charset=UTF-8`
+

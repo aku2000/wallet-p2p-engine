@@ -145,3 +145,4 @@ HAVING w.balance != COALESCE(SUM(
 ), 0);
 ```
 *Expected: 0 rows returned. Any row indicates a conservation violation.*
+

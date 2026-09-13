@@ -131,3 +131,4 @@ class WalletControllerTest {
                 .andExpect(jsonPath("$.service").value("wallet-p2p-engine"));
     }
 }
+

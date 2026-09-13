@@ -29,3 +29,4 @@ In a financial wallet system:
 ## Consequences
 - **Positive**: Strict financial invariants are always preserved; zero double-spending; balances are authoritative at all times.
 - **Negative**: The service availability SLA is strictly bounded by the primary database availability SLA.
+

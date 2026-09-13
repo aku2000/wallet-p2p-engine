@@ -74,3 +74,4 @@ Seeds three wallets (A, B, C) and fires 50 concurrent cross-transfers touching t
 - `All Balances >= 0`: No wallet overdrawn.
 - `HTTP 500 Count: 0`: No database deadlocks under bidirectional contention ($A \to B$ and $B \to A$).
 - Script exits with code `0`: `✅ GATE 3 PASSED: Conservation, no-overdraft, and deadlock-free contention all verified!`
+

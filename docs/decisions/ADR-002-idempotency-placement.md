@@ -37,3 +37,4 @@ To detect payload tampering or unintended key collisions, we compute a SHA-256 h
 ## Consequences
 - **Positive**: Zero possibility of duplicate balance mutations under concurrent retry storms; zero dual-write inconsistencies; clean detection of payload divergence (`409 Conflict`).
 - **Negative**: The unique index check holds an index row lock during the short duration of the transfer transaction.
+

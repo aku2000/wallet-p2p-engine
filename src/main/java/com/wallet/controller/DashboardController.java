@@ -1,10 +1,12 @@
 package com.wallet.controller;
 
-import com.wallet.metrics.WalletMetrics;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.wallet.metrics.WalletMetrics;
+
 
 @RestController
 public class DashboardController {
@@ -201,3 +203,4 @@ public class DashboardController {
         return ResponseEntity.ok(rendered);
     }
 }
+

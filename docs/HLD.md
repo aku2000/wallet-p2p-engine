@@ -139,3 +139,4 @@ In a distributed financial system, the CAP theorem mandates a choice between **C
 | Storage per Transfer | ~500 bytes (1 transfer + 2 ledger entries) | 100,000 daily transfers = 50 MB / day (~18 GB / year). |
 | Lock Duration | < 5 milliseconds | Two index-based row locks held strictly during memory updates. |
 | Connection Pool | 20 connections | Minimizes PostgreSQL backend contention while sustaining concurrency. |
+

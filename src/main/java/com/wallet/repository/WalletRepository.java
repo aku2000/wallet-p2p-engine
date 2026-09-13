@@ -29,9 +29,11 @@ public class WalletRepository {
 
     @Transactional(readOnly = true)
     public Optional<Wallet> findById(UUID id) {
+        // Pass UUID directly — PostgreSQL JDBC driver sends it as the uuid OID,
+        // avoiding "operator does not exist: uuid = character varying" errors.
         List<Wallet> results = jdbc.query(
                 "SELECT id, user_id, balance, created_at, updated_at FROM wallets WHERE id = ?",
-                WALLET_ROW_MAPPER, id.toString()
+                WALLET_ROW_MAPPER, id
         );
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
@@ -79,13 +81,14 @@ public class WalletRepository {
         UUID lowerId  = id1.compareTo(id2) <= 0 ? id1 : id2;
         UUID higherId = id1.compareTo(id2) <= 0 ? id2 : id1;
 
+        // Pass UUID directly (not .toString()) to avoid PostgreSQL type cast errors
         Wallet low = jdbc.queryForObject(
                 "SELECT id, user_id, balance, created_at, updated_at FROM wallets WHERE id = ? FOR UPDATE",
-                WALLET_ROW_MAPPER, lowerId.toString()
+                WALLET_ROW_MAPPER, lowerId
         );
         Wallet high = jdbc.queryForObject(
                 "SELECT id, user_id, balance, created_at, updated_at FROM wallets WHERE id = ? FOR UPDATE",
-                WALLET_ROW_MAPPER, higherId.toString()
+                WALLET_ROW_MAPPER, higherId
         );
         // Both rows are now locked for the duration of the calling transaction
         return List.of(low, high);
@@ -99,7 +102,7 @@ public class WalletRepository {
     public void adjustBalance(UUID walletId, long delta) {
         jdbc.update(
                 "UPDATE wallets SET balance = balance + ?, updated_at = NOW() WHERE id = ?",
-                delta, walletId.toString()
+                delta, walletId
         );
     }
 }

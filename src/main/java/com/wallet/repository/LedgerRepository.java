@@ -36,8 +36,8 @@ public class LedgerRepository {
                 "INSERT INTO ledger_entries " +
                 "(id, transfer_id, wallet_id, direction, amount_paise, balance_before, balance_after) " +
                 "VALUES (gen_random_uuid(), ?, ?, ?, ?, ?, ?)",
-                transferId.toString(),
-                walletId.toString(),
+                transferId,
+                walletId,
                 direction,
                 amountPaise,
                 balanceBefore,
