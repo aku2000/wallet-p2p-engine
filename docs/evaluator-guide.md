@@ -2,10 +2,12 @@
 
 This guide is designed for reviewers to inspect, verify, and test the **Digital Wallet & P2P Transfer Engine** deployed live on cloud infrastructure.
 
-- **Live Base URL:** `https://wallet-p2p-engine.onrender.com`
-- **GitHub Repository:** `https://github.com/aku2000/wallet-p2p-engine`
-- **Real-Time Live Dashboard:** `https://wallet-p2p-engine.onrender.com/dashboard`
-- **Liveness Probe:** `https://wallet-p2p-engine.onrender.com/health`
+- **Live Base URL:** `https://wallet-p2p-engine.onrender.com` *(Opening in browser redirects directly to Dashboard)*
+- **Real-Time Live Dashboard:** [`https://wallet-p2p-engine.onrender.com/dashboard`](https://wallet-p2p-engine.onrender.com/dashboard)
+- **Live Server Log Stream:** [`https://wallet-p2p-engine.onrender.com/actuator/logfile`](https://wallet-p2p-engine.onrender.com/actuator/logfile)
+- **Live Prometheus Metrics:** [`https://wallet-p2p-engine.onrender.com/actuator/prometheus`](https://wallet-p2p-engine.onrender.com/actuator/prometheus)
+- **GitHub Repository:** [`https://github.com/aku2000/wallet-p2p-engine`](https://github.com/aku2000/wallet-p2p-engine)
+- **Health Check Probe:** [`https://wallet-p2p-engine.onrender.com/health`](https://wallet-p2p-engine.onrender.com/health)
 
 ---
 
