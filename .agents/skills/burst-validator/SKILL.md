@@ -40,10 +40,10 @@ echo "All financial invariants verified successfully!"
 echo "=========================================================="
 ```
 
-## How to Demonstrate During Interviews
+## Autonomous Agent Invocation
 
-You can instruct your AI assistant in chat:
+When evaluating with an AI agent (Antigravity, Claude Code, Cursor, Windsurf):
 > *"Run the burst-validator skill against https://wallet-p2p-engine.onrender.com"*
 
-The agent will execute all three gates sequentially, stream the terminal verification output, and print a consolidated validation report showing that no money was created or destroyed and all invariants held.
+The agent executes all three gates sequentially, streams the terminal verification output, and produces a consolidated validation report showing that all financial invariants held under concurrency.
 
