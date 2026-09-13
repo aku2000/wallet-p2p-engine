@@ -47,6 +47,9 @@ public class BearerAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        if (path.equals("/") || path.isEmpty()) {
+            return true;
+        }
         return PUBLIC_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
