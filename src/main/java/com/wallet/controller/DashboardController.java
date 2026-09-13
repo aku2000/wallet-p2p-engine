@@ -125,22 +125,22 @@ public class DashboardController {
                 <div class="grid">
                     <div class="card">
                         <div class="card-title">Completed Transfers</div>
-                        <div class="card-value val-green">%d</div>
+                        <div class="card-value val-green">{{COMPLETED}}</div>
                         <div class="card-sub">status = completed (conservation verified)</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Declined Transfers</div>
-                        <div class="card-value val-red">%d</div>
+                        <div class="card-value val-red">{{DECLINED}}</div>
                         <div class="card-sub">reason = insufficient_funds (no overdraft)</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Idempotent Replays</div>
-                        <div class="card-value val-yellow">%d</div>
+                        <div class="card-value val-yellow">{{REPLAY}}</div>
                         <div class="card-sub">duplicate keys safely deduplicated</div>
                     </div>
                     <div class="card">
                         <div class="card-title">Wallets Created</div>
-                        <div class="card-value val-blue">%d</div>
+                        <div class="card-value val-blue">{{WALLETS}}</div>
                         <div class="card-sub">race-free get-or-create instances</div>
                     </div>
                 </div>
@@ -192,12 +192,11 @@ public class DashboardController {
             </html>
             """;
 
-        String rendered = String.format(template,
-                (long) metrics.getTransfersCompleted(),
-                (long) metrics.getTransfersDeclined(),
-                (long) metrics.getTransfersIdempotentReplay(),
-                (long) metrics.getWalletsCreated()
-        );
+        String rendered = template
+                .replace("{{COMPLETED}}", String.valueOf((long) metrics.getTransfersCompleted()))
+                .replace("{{DECLINED}}", String.valueOf((long) metrics.getTransfersDeclined()))
+                .replace("{{REPLAY}}", String.valueOf((long) metrics.getTransfersIdempotentReplay()))
+                .replace("{{WALLETS}}", String.valueOf((long) metrics.getWalletsCreated()));
 
         return ResponseEntity.ok(rendered);
     }
