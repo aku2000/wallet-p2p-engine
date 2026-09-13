@@ -76,29 +76,72 @@ curl -i -X POST https://wallet-p2p-engine.onrender.com/wallets \
 ```
 *Response: HTTP 201 with wallet UUID and initial balance (0).*
 
+---
+
 ### 2. Check Wallet Balance
+**Template:**
 ```bash
 curl -i https://wallet-p2p-engine.onrender.com/wallets/<wallet_uuid> \
-  -H "Authorization: Bearer alice"
+  -H "Authorization: Bearer <username>"
 ```
 
+**Ready-to-Run Live Sample (Active Pre-Seeded Account):**
+```bash
+curl -i https://wallet-p2p-engine.onrender.com/wallets/71e66003-203d-4425-8a9f-5108e508969f \
+  -H "Authorization: Bearer user-retry-a"
+```
+*Returns real live balance (~49,200 paise / ₹492.00).*
+
+---
+
 ### 3. Execute Transfer
+**Template:**
 ```bash
 curl -i -X POST https://wallet-p2p-engine.onrender.com/transfers \
-  -H "Authorization: Bearer alice" \
+  -H "Authorization: Bearer <sender_username>" \
   -H "Content-Type: application/json" \
   -d '{
-    "from": "<alice_wallet_uuid>",
-    "to": "<bob_wallet_uuid>",
-    "amount_paise": 1000,
-    "idempotency_key": "custom-tx-key-001",
+    "from": "<sender_wallet_uuid>",
+    "to": "<recipient_wallet_uuid>",
+    "amount_paise": 100,
+    "idempotency_key": "unique-client-key-'$RANDOM'",
     "note": "P2P transfer test"
   }'
 ```
-*Responses:*
-- `HTTP 201 Created` — newly completed transfer.
-- `HTTP 422 Unprocessable Entity` — transfer declined (insufficient balance).
-- `HTTP 409 Conflict` — same `idempotency_key` reused with a modified request body.
+
+**Ready-to-Run Live Sample (Sends ₹1.00 from user-retry-a to user-retry-b):**
+```bash
+curl -i -X POST https://wallet-p2p-engine.onrender.com/transfers \
+  -H "Authorization: Bearer user-retry-a" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "71e66003-203d-4425-8a9f-5108e508969f",
+    "to": "bb332fd2-a223-4d9c-9a36-2c8fea301eb8",
+    "amount_paise": 100,
+    "idempotency_key": "live-demo-key-1",
+    "note": "Evaluator live demo"
+  }'
+```
+*Behavior on first run: `HTTP 201 Created` with transfer ID.*  
+*Behavior on resend with same key: `HTTP 201 Created` with identical transfer ID (idempotent replay, zero duplicate deduction).*  
+*Behavior on resend with same key but altered amount (e.g. `999`): `HTTP 409 Conflict`.*
+
+---
+
+### 4. Overdraft Test (Immediate Declination)
+**Ready-to-Run Live Sample (Attempts to send ₹100,000 when balance is ~₹492):**
+```bash
+curl -i -X POST https://wallet-p2p-engine.onrender.com/transfers \
+  -H "Authorization: Bearer user-retry-a" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "71e66003-203d-4425-8a9f-5108e508969f",
+    "to": "bb332fd2-a223-4d9c-9a36-2c8fea301eb8",
+    "amount_paise": 10000000,
+    "idempotency_key": "overdraft-demo-'$RANDOM'"
+  }'
+```
+*Returns `HTTP 422 Unprocessable Entity` (`status: declined`, `reason: insufficient_funds`).*
 
 ---
 
@@ -111,3 +154,4 @@ curl -i -X POST https://wallet-p2p-engine.onrender.com/transfers \
 | **Deadlock Elimination** | Deterministic Ascending UUID `SELECT ... FOR UPDATE` | Locking lower UUID first prevents circular wait under bidirectional crosses ($A \leftrightarrow B$). |
 | **Double-Entry Ledger** | Append-only `ledger_entries` table | Every transfer creates immutable debit and credit snapshot rows with `balance_before` & `balance_after`. |
 | **Money Representation** | `BIGINT` integer paise | Zero floating-point rounding errors. |
+
