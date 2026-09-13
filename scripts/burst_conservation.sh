@@ -39,6 +39,17 @@ if [ -z "${2:-}" ]; then
     WALLET_A=$(printf '%s' "$RESP_A" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     WALLET_B=$(printf '%s' "$RESP_B" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     WALLET_C=$(printf '%s' "$RESP_C" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+    # Auto-seed funds if seed_wallet.py is present
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "$SCRIPT_DIR/seed_wallet.py" ]; then
+        PYTHON_BIN="python3"
+        [ -f "/tmp/wallet-venv/bin/python3" ] && PYTHON_BIN="/tmp/wallet-venv/bin/python3"
+        echo "Seeding test wallets with initial funds (100,000 paise each)..."
+        "$PYTHON_BIN" "$SCRIPT_DIR/seed_wallet.py" "$USER_A" 100000 >/dev/null 2>&1 || true
+        "$PYTHON_BIN" "$SCRIPT_DIR/seed_wallet.py" "$USER_B" 100000 >/dev/null 2>&1 || true
+        "$PYTHON_BIN" "$SCRIPT_DIR/seed_wallet.py" "$USER_C" 100000 >/dev/null 2>&1 || true
+    fi
 else
     WALLET_A="$2"; USER_A="${3:-alice}"
     WALLET_B="$4"; USER_B="${5:-bob}"

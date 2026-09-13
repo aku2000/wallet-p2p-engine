@@ -37,6 +37,15 @@ if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
     FROM_WALLET=$(printf '%s' "$RESP_A" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     TO_WALLET=$(printf '%s' "$RESP_B" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     SENDER_USER="$USER_A"
+
+    # Auto-seed funds if seed_wallet.py is present
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "$SCRIPT_DIR/seed_wallet.py" ]; then
+        PYTHON_BIN="python3"
+        [ -f "/tmp/wallet-venv/bin/python3" ] && PYTHON_BIN="/tmp/wallet-venv/bin/python3"
+        echo "Seeding test sender with initial funds..."
+        "$PYTHON_BIN" "$SCRIPT_DIR/seed_wallet.py" "$SENDER_USER" 50000 >/dev/null 2>&1 || true
+    fi
 else
     FROM_WALLET="$2"
     TO_WALLET="$3"
@@ -57,26 +66,17 @@ BAL_BEFORE=$(printf '%s' "$BAL_RESP" | grep -o '"balance":[0-9]*' | cut -d: -f2 
 echo "  Sender balance before: ${BAL_BEFORE} paise"
 echo ""
 
-# ── Seed balance if needed ────────────────────────────────────────────────────
-if [ "${BAL_BEFORE:-0}" -lt "$AMOUNT_PAISE" ]; then
-    echo "⚠️  Balance too low — transfers will return 422 (no funds)."
-    echo "   Idempotency is still testable: all 30 should return the SAME 422 response with SAME id."
-    echo ""
-fi
-
 PAYLOAD='{"from":"'"$FROM_WALLET"'","to":"'"$TO_WALLET"'","amount_paise":'"$AMOUNT_PAISE"',"idempotency_key":"'"$IDEMPOTENCY_KEY"'","note":"Idempotency probe"}'
 
 # ── Fire 30 concurrent identical requests ─────────────────────────────────────
 echo "Firing $K simultaneous identical POST /transfers..."
 for i in $(seq 1 "$K"); do
     (
-        # curl -s: silent, -w appends HTTP code on new line
         FULL=$(curl -s -w '\n%{http_code}' \
             -X POST "$BASE_URL/transfers" \
             -H "Authorization: Bearer $SENDER_USER" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" 2>/dev/null || true)
-        # Last line = HTTP code, everything before = body
         HTTP_CODE=$(printf '%s\n' "$FULL" | tail -1)
         BODY=$(printf '%s\n' "$FULL" | sed '$d')
         printf '%s %s\n' "${HTTP_CODE:-000}" "$BODY" > "$OUT_DIR/resp_$i.txt"
@@ -95,7 +95,11 @@ echo "$ALL_CODES"
 # Extract unique transfer IDs from all responses
 TRANSFER_IDS=$(awk '{$1=""; print $0}' "$OUT_DIR"/resp_*.txt 2>/dev/null \
     | grep -o '"id":"[^"]*"' | sort -u || true)
-DISTINCT_TX_COUNT=$(printf '%s\n' "$TRANSFER_IDS" | grep -c '"id"' 2>/dev/null || echo 0)
+if [ -z "$TRANSFER_IDS" ]; then
+    DISTINCT_TX_COUNT=0
+else
+    DISTINCT_TX_COUNT=$(printf '%s\n' "$TRANSFER_IDS" | grep -c '"id"' || true)
+fi
 
 echo ""
 echo "Unique Transfer IDs across all 30 responses:"

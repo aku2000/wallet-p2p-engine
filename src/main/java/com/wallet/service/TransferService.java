@@ -144,22 +144,23 @@ public class TransferService {
             // All steps inside a single database transaction
             Transfer result = transactionTemplate.execute(txStatus -> {
 
-                // STEP 1: Insert transfer row (pending).
+                // STEP 1: Lock both wallets in ascending UUID order.
+                // This is the deadlock-prevention mechanism:
+                // A→B and B→A both acquire lock on the lower UUID first.
+                // One blocks, the other commits, then the blocked one proceeds with fresh data.
+                // Crucially, locking occurs BEFORE inserting the transfer row so that PostgreSQL
+                // foreign key validation does not acquire uncoordinated locks in conflicting order.
+                List<Wallet> locked = walletRepository.lockInSortedOrder(fromWalletId, toWalletId);
+                Wallet sender   = findFromList(locked, fromWalletId);
+                Wallet receiver = findFromList(locked, toWalletId);
+
+                // STEP 2: Insert transfer row (pending).
                 // If idempotency_key already exists → DuplicateKeyException thrown here.
-                // This INSERT blocks if a concurrent tx has the same key in-flight (PostgreSQL
-                // unique index semantics: waits until the concurrent tx commits or rolls back).
+                // Caught outside transactionTemplate.execute() for idempotent replay.
                 transferRepository.insertPending(
                         transferId, fromWalletId, toWalletId,
                         request.amountPaise(), request.idempotencyKey(), requestHash, request.note()
                 );
-
-                // STEP 2: Lock both wallets in ascending UUID order.
-                // This is the deadlock-prevention mechanism:
-                // A→B and B→A both acquire lock on the lower UUID first.
-                // One blocks, the other commits, then the blocked one proceeds with fresh data.
-                List<Wallet> locked = walletRepository.lockInSortedOrder(fromWalletId, toWalletId);
-                Wallet sender   = findFromList(locked, fromWalletId);
-                Wallet receiver = findFromList(locked, toWalletId);
 
                 // STEP 3: Balance check on the LOCKED row (not a stale pre-lock read).
                 if (sender.balance() < request.amountPaise()) {
